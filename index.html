@@ -257,7 +257,7 @@ section{padding:100px 5%;}
 .faq-list{display:flex;flex-direction:column;}
 .faq-item{border-bottom:1px solid var(--gb);}
 .faq-q{width:100%;padding:22px 0;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;font-family:var(--sans);font-size:15px;font-weight:500;color:var(--black);text-align:left;gap:20px;}
-.faq-ico{width:28px;height:28px;min-width:28px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:.3s;}
+.faq-ico{width:28px;height:28px;min-width:28px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;}
 .faq-item.open .faq-ico{transform:rotate(45deg);}
 .faq-a{font-size:14px;line-height:1.75;color:var(--gd);max-height:0;overflow:hidden;transition:.3s;}
 .faq-item.open .faq-a{max-height:200px;padding-bottom:20px;}
@@ -336,8 +336,6 @@ footer{background:var(--black);color:var(--white);padding:80px 5% 40px;}
     </div>
   </div>
 </div>
-
-<!-- GOOGLE PICKER (Firebase maneja el login real con popup) -->
 
 <!-- PAYWALL MODAL -->
 <div class="overlay" id="paywallOverlay">
@@ -563,7 +561,7 @@ footer{background:var(--black);color:var(--white);padding:80px 5% 40px;}
       <h3>Tienes mas <em>preguntas</em>?</h3>
       <p>Estamos aqui para ayudarte. Respondemos en menos de 24 horas.</p>
       <div class="clinks">
-        <a href="/cdn-cgi/l/email-protection#21494e4d40614740534e0f444554" class="clink"><div class="clink-ico">&#9993;</div><span><span class="__cf_email__" data-cfemail="f59d9a9994b59394879adb909180">[email&#160;protected]</span></span></a>
+        <a href="mailto:info@faro.com" class="clink"><div class="clink-ico">&#9993;</div><span>info@faro.com</span></a>
         <a href="#" class="clink"><div class="clink-ico">&#128172;</div><span>WhatsApp disponible</span></a>
         <a href="#" class="clink"><div class="clink-ico">&#128197;</div><span>Agenda una llamada</span></a>
       </div>
@@ -589,7 +587,7 @@ footer{background:var(--black);color:var(--white);padding:80px 5% 40px;}
 </footer>
 </div>
 
-<!-- Firebase SDKs via CDN (sin type=module para compatibilidad con GitHub Pages) -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -653,7 +651,6 @@ async function loadPurchasesFromFirestore(){
 
 // ── Auth ───────────────────────────────────────────────────────
 auth.onAuthStateChanged(async(firebaseUser)=>{
-  // Esperar a que el DOM esté listo antes de tocar el navbar
   const ready = ()=> new Promise(r => {
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',r);
     else r();
@@ -701,9 +698,15 @@ function loginSuccess(u,silent=false){
   else if(u.isAdmin){toast('Sesion activa: admin','ok');}
 }
 
-// ── Funciones globales de auth ─────────────────────────────────
+// ── CORRECCIÓN COOP: usar signInWithRedirect en lugar de signInWithPopup ──
+// Esto evita el error "Cross-Origin-Opener-Policy policy would block the window.closed call"
+// que ocurre en GitHub Pages y otros entornos con cabeceras COOP estrictas.
 window.doGoogleLogin = async function(){
-  try{await auth.signInWithPopup(provider);closeModal('authOverlay');}
+  try{
+    await auth.signInWithRedirect(provider);
+    // La página recargará automáticamente — Firebase redirige a Google y vuelve aquí.
+    // onAuthStateChanged detectará al usuario al regresar.
+  }
   catch(e){toast('Error con Google: '+(e.message||e),'err');}
 };
 
@@ -866,11 +869,25 @@ window.closeVid = function(){document.getElementById('vidPlayer').src='';closeMo
 // ── Scroll & FAQ ───────────────────────────────────────────────
 window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',scrollY>20));
 
+// ── CORRECCIÓN COOP: capturar resultado del redirect de Google ──
+// Este bloque recupera el usuario después de que Google redirige de vuelta a la página.
+// onAuthStateChanged se encarga del resto automáticamente.
+auth.getRedirectResult()
+  .then((result) => {
+    if(result && result.user){
+      closeModal('authOverlay');
+    }
+  })
+  .catch((e) => {
+    if(e.code !== 'auth/no-current-user'){
+      toast('Error con Google: '+(e.message||e),'err');
+    }
+  });
+
 // ── Init ───────────────────────────────────────────────────────
 loadCoursesFromFirestore();
 </script>
 
-<!-- Puente global: garantiza que onclick inline siempre encuentre las funciones -->
 <script>
 (function waitForModule(){
   const fns=['openModal','closeModal','doGoogleLogin','doEmailLogin','doRegister',
@@ -886,3 +903,5 @@ loadCoursesFromFirestore();
   },50);
 })();
 </script>
+</body>
+</html>
