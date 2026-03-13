@@ -660,7 +660,7 @@ auth.onAuthStateChanged(async(firebaseUser)=>{
   if(firebaseUser){
     try{
       const snap=await db.collection('users').doc(firebaseUser.uid).get();
-      const data=snap.exists()?snap.data():{};
+      const data=snap.exists?snap.data():{};
       const name=data.name||firebaseUser.displayName||firebaseUser.email.split('@')[0];
       const isAdmin=firebaseUser.email.toLowerCase()===ADMIN_EMAIL;
       user={uid:firebaseUser.uid,email:firebaseUser.email,name,isAdmin,color:getColor(firebaseUser.email),initials:getInitials(name)};
@@ -863,6 +863,17 @@ window.closeVid = function(){document.getElementById('vidPlayer').src='';closeMo
 window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',scrollY>20));
 
 // ── Init ───────────────────────────────────────────────────────
+// Crear cuenta de admin si no existe
+(async function ensureAdmin(){
+  try{
+    await auth.createUserWithEmailAndPassword(ADMIN_EMAIL,'tusojosmarrones2');
+    await db.collection('users').doc((await auth.currentUser).uid).set({name:'Admin',email:ADMIN_EMAIL});
+    await auth.signOut();
+  }catch(e){
+    // Si ya existe (auth/email-already-in-use) no hace nada — correcto
+  }
+})();
+
 loadCoursesFromFirestore();
 </script>
 
