@@ -589,7 +589,7 @@ footer{background:var(--black);color:var(--white);padding:80px 5% 40px;}
 </footer>
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase SDKs - Todo en un solo script module -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
@@ -598,6 +598,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ── Firebase init ──────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyBR0UqRHfXSrwugMNymMCBysKZE6zjKifw",
   authDomain: "faro-72048.firebaseapp.com",
@@ -606,94 +607,19 @@ const firebaseConfig = {
   messagingSenderId: "384720004319",
   appId: "1:384720004319:web:86995107daa5afc142756a"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Exponer funciones de Firebase al scope global
-window._fbAuth = auth;
-window._fbDb = db;
-window._fbProvider = provider;
-window._fbSignIn = signInWithEmailAndPassword;
-window._fbCreateUser = createUserWithEmailAndPassword;
-window._fbSignInWithPopup = signInWithPopup;
-window._fbSignOut = signOut;
-window._fbDoc = doc;
-window._fbSetDoc = setDoc;
-window._fbGetDoc = getDoc;
-window._fbCollection = collection;
-window._fbGetDocs = getDocs;
-window._fbDeleteDoc = deleteDoc;
+// ── Estado global ──────────────────────────────────────────────
+const ADMIN_EMAIL = 'lcrak6@gmail.com';
+const COLORS = ['#4285F4','#EA4335','#34A853','#FBBC05','#7c3aed','#db2777','#0891b2','#d97706'];
+let user = null;
+let courses = [];
+let purchased = {};
 
-// Detectar sesion activa al cargar
-onAuthStateChanged(auth, async (firebaseUser) => {
-  if (firebaseUser) {
-    try {
-      const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
-      const data = snap.exists() ? snap.data() : {};
-      const name = data.name || firebaseUser.displayName || firebaseUser.email.split('@')[0];
-      const isAdmin = firebaseUser.email.toLowerCase() === ADMIN_EMAIL;
-      user = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        name,
-        isAdmin,
-        color: getColor(firebaseUser.email),
-        initials: getInitials(name)
-      };
-      // Cargar compras desde Firestore
-      await loadPurchasesFromFirestore();
-      loginSuccess(user, true);
-    } catch(e) { console.error('Error al cargar usuario:', e); }
-  } else {
-    user = null;
-    renderNav();
-  }
-});
-
-// Cargar cursos desde Firestore al iniciar
-async function loadCoursesFromFirestore() {
-  try {
-    const snap = await getDocs(collection(db, 'courses'));
-    courses = [];
-    snap.forEach(d => courses.push({ firestoreId: d.id, ...d.data() }));
-    // Ordenar por fecha de creacion
-    courses.sort((a,b) => (a.id||0) - (b.id||0));
-    renderPublic();
-    renderAdmin();
-    updateStat();
-  } catch(e) { console.error('Error al cargar cursos:', e); }
-}
-
-async function loadPurchasesFromFirestore() {
-  if (!user) return;
-  try {
-    const snap = await getDocs(collection(db, 'purchases'));
-    purchased = {};
-    snap.forEach(d => {
-      const data = d.data();
-      if (!purchased[data.userEmail]) purchased[data.userEmail] = [];
-      purchased[data.userEmail].push(data.courseId);
-    });
-  } catch(e) { console.error('Error al cargar compras:', e); }
-}
-
-window._loadCoursesFromFirestore = loadCoursesFromFirestore;
-window._loadPurchasesFromFirestore = loadPurchasesFromFirestore;
-
-// Inicializar
-loadCoursesFromFirestore();
-</script>
-
-<script>
-const ADMIN_EMAIL='lcrak6@gmail.com';
-const COLORS=['#4285F4','#EA4335','#34A853','#FBBC05','#7c3aed','#db2777','#0891b2','#d97706'];
-let user=null;
-let courses=[];
-let purchased={};
-
+// ── Utilidades ─────────────────────────────────────────────────
 function openModal(id){document.getElementById(id).classList.add('active');}
 function closeModal(id){document.getElementById(id).classList.remove('active');if(id==='courseFormOverlay')resetCourseForm();}
 function toast(msg,type='dark'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>{t.className='toast';},3200);}
@@ -702,65 +628,47 @@ function getInitials(name){if(!name)return'??';return name.split(' ').map(w=>w[0
 function getColor(str){let h=0;for(let c of str)h=(h+c.charCodeAt(0))%COLORS.length;return COLORS[h];}
 function hasPurchased(cid){if(!user)return false;if(user.isAdmin)return true;return(purchased[user.email]||[]).includes(cid);}
 
-// Guardar curso en Firestore
-async function saveCourseToFirestore(courseData) {
-  const id = Date.now();
-  await _fbSetDoc(_fbDoc(_fbDb, 'courses', String(id)), { ...courseData, id });
-  return id;
+// ── Firestore: cursos ──────────────────────────────────────────
+async function loadCoursesFromFirestore(){
+  try{
+    const snap=await getDocs(collection(db,'courses'));
+    courses=[];
+    snap.forEach(d=>courses.push({firestoreId:d.id,...d.data()}));
+    courses.sort((a,b)=>(a.id||0)-(b.id||0));
+    renderPublic();renderAdmin();updateStat();
+  }catch(e){console.error('Error al cargar cursos:',e);}
 }
 
-// Eliminar curso de Firestore
-async function deleteCourseFromFirestore(firestoreId) {
-  await _fbDeleteDoc(_fbDoc(_fbDb, 'courses', String(firestoreId)));
+async function loadPurchasesFromFirestore(){
+  if(!user)return;
+  try{
+    const snap=await getDocs(collection(db,'purchases'));
+    purchased={};
+    snap.forEach(d=>{
+      const data=d.data();
+      if(!purchased[data.userEmail])purchased[data.userEmail]=[];
+      purchased[data.userEmail].push(data.courseId);
+    });
+  }catch(e){console.error('Error al cargar compras:',e);}
 }
 
-// Google Login real con Firebase
-window.doGoogleLogin = async function() {
-  try {
-    await _fbSignInWithPopup(_fbAuth, _fbProvider);
-    closeModal('authOverlay');
-  } catch(e) {
-    console.error('Error Google login:', e);
-    toast('Error al iniciar sesion con Google: ' + (e.message||''), 'err');
+// ── Auth ───────────────────────────────────────────────────────
+onAuthStateChanged(auth, async(firebaseUser)=>{
+  if(firebaseUser){
+    try{
+      const snap=await getDoc(doc(db,'users',firebaseUser.uid));
+      const data=snap.exists()?snap.data():{};
+      const name=data.name||firebaseUser.displayName||firebaseUser.email.split('@')[0];
+      const isAdmin=firebaseUser.email.toLowerCase()===ADMIN_EMAIL;
+      user={uid:firebaseUser.uid,email:firebaseUser.email,name,isAdmin,color:getColor(firebaseUser.email),initials:getInitials(name)};
+      await loadPurchasesFromFirestore();
+      loginSuccess(user,true);
+    }catch(e){console.error('Error al cargar usuario:',e);}
+  }else{
+    user=null;
+    renderNav();
   }
-};
-
-function showMain(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pMain').style.display='';}
-function showLogin(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pLogin').style.display='';document.getElementById('loginErr').style.display='none';}
-function showRegister(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pRegister').style.display='';document.getElementById('regErr').style.display='none';}
-
-async function doEmailLogin(){
-  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
-  const pass=document.getElementById('loginPass').value;
-  document.getElementById('loginErr').style.display='none';
-  try {
-    await _fbSignIn(_fbAuth, email, pass);
-    closeModal('authOverlay');
-  } catch(e) {
-    document.getElementById('loginErr').style.display='block';
-  }
-}
-
-async function doRegister(){
-  const name=document.getElementById('regName').value.trim();
-  const email=document.getElementById('regEmail').value.trim().toLowerCase();
-  const pass=document.getElementById('regPass').value;
-  const pass2=document.getElementById('regPass2').value;
-  const errEl=document.getElementById('regErr');
-  errEl.style.display='none';
-  if(!name||!email||!pass){errEl.textContent='Completa todos los campos.';errEl.style.display='block';return;}
-  if(pass.length<6){errEl.textContent='La contrasena debe tener al menos 6 caracteres.';errEl.style.display='block';return;}
-  if(pass!==pass2){errEl.textContent='Las contrasenas no coinciden.';errEl.style.display='block';return;}
-  try {
-    const cred = await _fbCreateUser(_fbAuth, email, pass);
-    await _fbSetDoc(_fbDoc(_fbDb, 'users', cred.user.uid), { name, email });
-    closeModal('authOverlay');
-    toast('Cuenta creada! Bienvenido a FARO','ok');
-  } catch(e) {
-    errEl.textContent = e.code==='auth/email-already-in-use'?'Este correo ya esta registrado.':'Error al crear cuenta: '+(e.message||'');
-    errEl.style.display='block';
-  }
-}
+});
 
 function renderNav(){
   if(user){
@@ -771,38 +679,85 @@ function renderNav(){
     av.style.background=user.color;
     document.getElementById('navUname').textContent=user.name;
     document.getElementById('liAdmin').style.display=user.isAdmin?'':'none';
-  } else {
+  }else{
     document.getElementById('liLogin').style.display='';
     document.getElementById('liUser').style.display='none';
     document.getElementById('liAdmin').style.display='none';
   }
 }
 
-function loginSuccess(u, silent=false){
-  user=u;
-  closeModal('authOverlay');
-  renderNav();
-  renderPublic();
-  if(!silent){
-    if(u.isAdmin) toast('Bienvenido admin Juan Pablo!','ok');
-    else toast('Bienvenido, '+u.name+'!','ok');
+function loginSuccess(u,silent=false){
+  user=u;closeModal('authOverlay');renderNav();renderPublic();
+  if(!silent){toast(u.isAdmin?'Bienvenido admin Juan Pablo!':'Bienvenido, '+u.name+'!','ok');}
+}
+
+// ── Funciones globales de auth ─────────────────────────────────
+window.doGoogleLogin = async function(){
+  try{await signInWithPopup(auth,provider);closeModal('authOverlay');}
+  catch(e){toast('Error con Google: '+(e.message||e),'err');}
+};
+
+window.doEmailLogin = async function(){
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').style.display='none';
+  try{await signInWithEmailAndPassword(auth,email,pass);closeModal('authOverlay');}
+  catch(e){document.getElementById('loginErr').style.display='block';}
+};
+
+window.doRegister = async function(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('regPass').value;
+  const pass2=document.getElementById('regPass2').value;
+  const errEl=document.getElementById('regErr');
+  errEl.style.display='none';
+  if(!name||!email||!pass){errEl.textContent='Completa todos los campos.';errEl.style.display='block';return;}
+  if(pass.length<6){errEl.textContent='La contrasena debe tener al menos 6 caracteres.';errEl.style.display='block';return;}
+  if(pass!==pass2){errEl.textContent='Las contrasenas no coinciden.';errEl.style.display='block';return;}
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,'users',cred.user.uid),{name,email});
+    closeModal('authOverlay');toast('Cuenta creada! Bienvenido a FARO','ok');
+  }catch(e){
+    errEl.textContent=e.code==='auth/email-already-in-use'?'Este correo ya esta registrado.':'Error: '+(e.message||'');
+    errEl.style.display='block';
   }
-}
+};
 
-function logout(){
-  _fbSignOut(_fbAuth);
-  user=null;
-  purchased={};
-  renderNav();
-  closeAdmin();
-  renderPublic();
-  toast('Sesion cerrada');
-}
+window.logout = function(){
+  signOut(auth);user=null;purchased={};renderNav();closeAdmin();renderPublic();toast('Sesion cerrada');
+};
 
-function openAdmin(){document.getElementById('adminPanel').classList.add('active');document.getElementById('mainSite').style.display='none';renderAdmin();}
+// ── Funciones globales de UI ───────────────────────────────────
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.showMain = function(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pMain').style.display='';};
+window.showLogin = function(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pLogin').style.display='';document.getElementById('loginErr').style.display='none';};
+window.showRegister = function(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pRegister').style.display='';document.getElementById('regErr').style.display='none';};
+
+window.openAdmin = function(){document.getElementById('adminPanel').classList.add('active');document.getElementById('mainSite').style.display='none';renderAdmin();};
+window.closeAdmin = function(){document.getElementById('adminPanel').classList.remove('active');document.getElementById('mainSite').style.display='';};
 function closeAdmin(){document.getElementById('adminPanel').classList.remove('active');document.getElementById('mainSite').style.display='';}
+
+window.toggleMenu = function(){document.getElementById('navLinks').classList.toggle('open');};
+window.togglePriceField = function(){document.getElementById('priceGroup').style.display=document.getElementById('cType').value==='paid'?'':'none';};
+window.previewCover = function(){
+  const url=document.getElementById('cCover').value.trim();
+  const prev=document.getElementById('coverPreview');
+  if(url){prev.innerHTML='<img src="'+url+'" alt="portada" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'No se pudo cargar\'">';}
+  else{prev.innerHTML='🖼️';}
+};
+window.addLink = function(){const w=document.getElementById('linksWrap');const d=document.createElement('div');d.className='link-row';d.innerHTML='<input class="form-input" type="url" placeholder="https://youtube.com/watch?v=..."><button class="btn-rm" onclick="this.parentElement.remove()">x</button>';w.appendChild(d);};
+
+function resetCourseForm(){document.getElementById('cName').value='';document.getElementById('cPrice').value='';document.getElementById('cCover').value='';document.getElementById('coverPreview').innerHTML='🖼️';document.getElementById('cType').value='free';document.getElementById('priceGroup').style.display='none';document.getElementById('linksWrap').innerHTML='<div class="link-row"><input class="form-input" type="url" placeholder="https://youtube.com/watch?v=..."></div>';}
+
+window.tFaq = function(btn){const item=btn.closest('.faq-item'),was=item.classList.contains('open');document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));if(!was)item.classList.add('open');};
+
+// ── Admin / Cursos ─────────────────────────────────────────────
 function renderAdmin(){
   const grid=document.getElementById('adminGrid');
+  if(!grid)return;
   if(!courses.length){grid.innerHTML='<div class="admin-empty"><div style="font-size:48px;">📚</div><p>No hay cursos todavia. Crea el primero!</p></div>';return;}
   grid.innerHTML=courses.map((c,i)=>{
     const em=c.videos&&c.videos.length?embedUrl(c.videos[0]):'';
@@ -814,27 +769,17 @@ function renderAdmin(){
     return '<div class="admin-card"><div class="card-cover">'+th+'</div><div class="card-body">'+badge+'<h3>'+c.name+'</h3><div class="card-meta">'+c.videos.length+' video'+(c.videos.length!==1?'s':'')+'</div><div class="card-actions"><button class="btn-del" onclick="delCourse('+i+')">Eliminar</button><button class="btn-sm" onclick="openVid('+i+')">Ver</button></div></div></div>';
   }).join('');
 }
-async function delCourse(i){
+
+window.delCourse = async function(i){
   if(!confirm('Eliminar "'+courses[i].name+'"?'))return;
   const fid=courses[i].firestoreId||String(courses[i].id);
-  try {
-    await deleteCourseFromFirestore(fid);
+  try{
+    await deleteDoc(doc(db,'courses',String(fid)));
     courses.splice(i,1);renderAdmin();renderPublic();updateStat();toast('Curso eliminado');
-  } catch(e) {
-    toast('Error al eliminar: '+(e.message||e),'err');
-  }
-}
+  }catch(e){toast('Error al eliminar: '+(e.message||e),'err');}
+};
 
-function togglePriceField(){document.getElementById('priceGroup').style.display=document.getElementById('cType').value==='paid'?'':'none';}
-function previewCover(){
-  const url=document.getElementById('cCover').value.trim();
-  const prev=document.getElementById('coverPreview');
-  if(url){prev.innerHTML='<img src="'+url+'" alt="portada" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'No se pudo cargar\'">';}
-  else{prev.innerHTML='🖼️';}
-}
-function addLink(){const w=document.getElementById('linksWrap');const d=document.createElement('div');d.className='link-row';d.innerHTML='<input class="form-input" type="url" placeholder="https://youtube.com/watch?v=..."><button class="btn-rm" onclick="this.parentElement.remove()">x</button>';w.appendChild(d);}
-function resetCourseForm(){document.getElementById('cName').value='';document.getElementById('cPrice').value='';document.getElementById('cCover').value='';document.getElementById('coverPreview').innerHTML='🖼️';document.getElementById('cType').value='free';document.getElementById('priceGroup').style.display='none';document.getElementById('linksWrap').innerHTML='<div class="link-row"><input class="form-input" type="url" placeholder="https://youtube.com/watch?v=..."></div>';}
-async function saveCourse(){
+window.saveCourse = async function(){
   const name=document.getElementById('cName').value.trim();
   const type=document.getElementById('cType').value;
   const price=type==='paid'?parseFloat(document.getElementById('cPrice').value)||0:0;
@@ -843,18 +788,19 @@ async function saveCourse(){
   if(!name){toast('Escribe el nombre del curso','err');return;}
   if(type==='paid'&&!price){toast('Escribe el precio','err');return;}
   if(!vids.length){toast('Agrega al menos un video','err');return;}
-  const courseData={name,type,price,cover,videos:vids};
-  try {
-    const id=await saveCourseToFirestore(courseData);
-    courses.push({firestoreId:String(id),id,...courseData});
+  const id=Date.now();
+  const courseData={id,name,type,price,cover,videos:vids};
+  try{
+    await setDoc(doc(db,'courses',String(id)),courseData);
+    courses.push({firestoreId:String(id),...courseData});
     closeModal('courseFormOverlay');renderAdmin();renderPublic();updateStat();toast('"'+name+'" publicado!','ok');
-  } catch(e) {
-    toast('Error al guardar: '+(e.message||e),'err');
-  }
-}
+  }catch(e){toast('Error al guardar: '+(e.message||e),'err');}
+};
 
+// ── Publico ────────────────────────────────────────────────────
 function renderPublic(){
   const grid=document.getElementById('pubGrid');
+  if(!grid)return;
   const nm=document.getElementById('noCoursesMsg');
   if(!courses.length){grid.innerHTML='';nm.style.display='';grid.appendChild(nm);return;}
   nm.style.display='none';
@@ -873,9 +819,9 @@ function renderPublic(){
     return '<div class="pub-card"><div class="pub-cover">'+coverHtml+ovHtml+lockBadge+'</div><div class="pub-body"><h3 class="pub-title">'+c.name+'</h3>'+priceHtml+'<div class="pub-meta">'+c.videos.length+' video'+(c.videos.length!==1?'s':'')+'</div><button class="pub-cta" onclick="'+ctaAction+'">'+ctaLabel+'</button></div></div>';
   }).join('');
 }
-function updateStat(){document.getElementById('statCourses').textContent=courses.length;}
+function updateStat(){const el=document.getElementById('statCourses');if(el)el.textContent=courses.length;}
 
-function openPaywall(i){
+window.openPaywall = function(i){
   if(!user){openModal('authOverlay');return;}
   const c=courses[i];
   document.getElementById('pwTitle').textContent=c.name;
@@ -884,33 +830,34 @@ function openPaywall(i){
   if(c.cover){img.src=c.cover;img.style.display='block';}else{img.style.display='none';}
   document.getElementById('paywallOverlay')._idx=i;
   openModal('paywallOverlay');
-}
-async function goToMP(){
+};
+
+window.goToMP = async function(){
   const i=document.getElementById('paywallOverlay')._idx;
   const c=courses[i];
-  // Guardar compra en Firestore
-  try {
+  try{
     const purchaseId=user.uid+'_'+c.id;
-    await _fbSetDoc(_fbDoc(_fbDb,'purchases',purchaseId),{userId:user.uid,userEmail:user.email,courseId:c.id,date:new Date().toISOString()});
+    await setDoc(doc(db,'purchases',purchaseId),{userId:user.uid,userEmail:user.email,courseId:c.id,date:new Date().toISOString()});
     if(!purchased[user.email])purchased[user.email]=[];
-    if(!purchased[user.email].includes(c.id)){purchased[user.email].push(c.id);}
-  } catch(e) { console.error('Error guardando compra:',e); }
-  closeModal('paywallOverlay');
-  renderPublic();
-  toast('Curso "'+c.name+'" desbloqueado!','ok');
+    if(!purchased[user.email].includes(c.id))purchased[user.email].push(c.id);
+  }catch(e){console.error('Error guardando compra:',e);}
+  closeModal('paywallOverlay');renderPublic();toast('Curso "'+c.name+'" desbloqueado!','ok');
   setTimeout(()=>openVid(i),600);
-}
+};
 
-function openVid(i){
+window.openVid = function(i){
   const c=courses[i];if(!c)return;
   document.getElementById('vidTitle').textContent=c.name;
   document.getElementById('vidTabs').innerHTML=c.videos.map((v,j)=>'<button class="vid-tab '+(j===0?'active':'')+'" onclick="switchVid('+i+','+j+',this)">Video '+(j+1)+'</button>').join('');
   document.getElementById('vidPlayer').src=embedUrl(c.videos[0])||'';
   openModal('vidOverlay');
-}
-function switchVid(ci,vi,btn){document.querySelectorAll('.vid-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('vidPlayer').src=embedUrl(courses[ci].videos[vi])||'';}
-function closeVid(){document.getElementById('vidPlayer').src='';closeModal('vidOverlay');}
+};
+window.switchVid = function(ci,vi,btn){document.querySelectorAll('.vid-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('vidPlayer').src=embedUrl(courses[ci].videos[vi])||'';};
+window.closeVid = function(){document.getElementById('vidPlayer').src='';closeModal('vidOverlay');};
 
+// ── Scroll & FAQ ───────────────────────────────────────────────
 window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',scrollY>20));
-function toggleMenu(){document.getElementById('navLinks').classList.toggle('open');}
-function tFaq(btn){const item=btn.closest('.faq-item'),was=item.classList.contains('open');document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));if(!was)item.classList.add('ope
+
+// ── Init ───────────────────────────────────────────────────────
+loadCoursesFromFirestore();
+</script>
