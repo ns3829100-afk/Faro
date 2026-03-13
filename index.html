@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com;">
+
 <title>FARO - Teologia del Cuerpo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -620,9 +620,12 @@ let courses = [];
 let purchased = {};
 
 // ── Utilidades ─────────────────────────────────────────────────
-function openModal(id){document.getElementById(id).classList.add('active');}
-function closeModal(id){document.getElementById(id).classList.remove('active');if(id==='courseFormOverlay')resetCourseForm();}
-function toast(msg,type='dark'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>{t.className='toast';},3200);}
+window.openModal = function(id){document.getElementById(id).classList.add('active');}
+window.closeModal = function(id){document.getElementById(id).classList.remove('active');if(id==='courseFormOverlay')resetCourseForm();}
+function openModal(id){window.openModal(id);}
+function closeModal(id){window.closeModal(id);}
+window.toast = function toast(msg,type='dark'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>{t.className='toast';},3200);}
+function toast(msg,type){window.toast(msg,type);}
 function embedUrl(url){if(!url)return'';const m1=url.match(/[?&]v=([^&]+)/);const m2=url.match(/youtu\.be\/([^?]+)/);const m3=url.match(/embed\/([^?]+)/);let id=m1?m1[1]:m2?m2[1]:m3?m3[1]:'';if(id)return'https://www.youtube-nocookie.com/embed/'+id+'?rel=0';const v=url.match(/vimeo\.com\/(\d+)/);if(v)return'https://player.vimeo.com/video/'+v[1];return url;}
 function getInitials(name){if(!name)return'??';return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 function getColor(str){let h=0;for(let c of str)h=(h+c.charCodeAt(0))%COLORS.length;return COLORS[h];}
@@ -730,8 +733,6 @@ window.logout = function(){
 };
 
 // ── Funciones globales de UI ───────────────────────────────────
-window.openModal = openModal;
-window.closeModal = closeModal;
 window.showMain = function(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pMain').style.display='';};
 window.showLogin = function(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pLogin').style.display='';document.getElementById('loginErr').style.display='none';};
 window.showRegister = function(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pRegister').style.display='';document.getElementById('regErr').style.display='none';};
@@ -860,4 +861,21 @@ window.addEventListener('scroll',()=>document.getElementById('navbar').classList
 
 // ── Init ───────────────────────────────────────────────────────
 loadCoursesFromFirestore();
+</script>
+
+<!-- Puente global: garantiza que onclick inline siempre encuentre las funciones -->
+<script>
+(function waitForModule(){
+  const fns=['openModal','closeModal','doGoogleLogin','doEmailLogin','doRegister',
+             'showMain','showLogin','showRegister','logout','openAdmin','closeAdmin',
+             'toggleMenu','togglePriceField','previewCover','addLink','saveCourse',
+             'delCourse','openPaywall','goToMP','openVid','switchVid','closeVid',
+             'tFaq','updateStat'];
+  let tries=0;
+  const iv=setInterval(()=>{
+    tries++;
+    const ready=fns.every(f=>typeof window[f]==='function');
+    if(ready||tries>50){clearInterval(iv);}
+  },50);
+})();
 </script>
