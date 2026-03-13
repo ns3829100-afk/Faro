@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com;">
+<title>FARO - Teologia del Cuerpo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--black:#111;--white:#fff;--yellow:#FFD400;--gl:#F3F4F6;--gd:#6B7280;--gb:#E5E7EB;--serif:'Cormorant Garamond',Georgia,serif;--sans:'Outfit',sans-serif;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--white);color:var(--black);overflow-x:hidden;}
+.overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:20px;}
+.overlay.active{display:flex;}
+.modal{background:var(--white);border-radius:12px;padding:44px 40px;width:100%;max-width:440px;position:relative;animation:mIn .25s ease;max-height:92vh;overflow-y:auto;}
+.modal-wide{max-width:520px;}
+.modal-video{max-width:780px;padding:0;overflow:hidden;}
+@keyframes mIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.modal-x{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gd);z-index:2;}
+.modal-x:hover{color:var(--black);}
+.modal-logo{display:flex;justify-content:center;margin-bottom:20px;}
+.modal-logo img{height:72px;object-fit:contain;}
+.modal h2{font-family:var(--serif);font-size:26px;font-weight:300;text-align:center;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--gd);text-align:center;margin-bottom:24px;}
+.min-input{width:100%;padding:12px 16px;border:1.5px solid var(--gb);border-radius:6px;font-family:var(--sans);font-size:14px;margin-bottom:10px;outline:none;transition:.2s;}
+.min-input:focus{border-color:var(--yellow);}
+.btn-y{width:100%;padding:14px;border-radius:4px;background:var(--yellow);color:var(--black);font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;transition:.2s;margin-top:2px;}
+.btn-y:hover{background:#e6be00;}
+.btn-k{width:100%;padding:14px;border-radius:4px;background:var(--black);color:var(--white);font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;transition:.2s;margin-top:2px;}
+.btn-k:hover{background:#333;}
+.btn-google{width:100%;padding:13px 20px;border-radius:6px;border:2px solid var(--gb);background:var(--white);display:flex;align-items:center;justify-content:center;gap:12px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;margin-bottom:16px;}
+.btn-google:hover{border-color:#4285F4;box-shadow:0 2px 12px rgba(66,133,244,.15);}
+.btn-google svg{width:20px;height:20px;flex-shrink:0;}
+.divider{display:flex;align-items:center;gap:12px;margin:14px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--gb);}
+.divider span{font-size:11px;color:var(--gd);white-space:nowrap;}
+.modal-err{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:10px;display:none;}
+.modal-link{text-align:center;margin-top:14px;font-size:13px;color:var(--gd);}
+.modal-link a{color:var(--black);cursor:pointer;font-weight:600;text-decoration:underline;}
+.gpicker{display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.gpicker.active{display:flex;}
+.gcard{background:#fff;border-radius:14px;padding:36px 30px;width:90%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.25);}
+.gcard-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+.gcard-head h3{font-size:19px;font-weight:500;color:#202124;line-height:1.2;}
+.gcard-head p{font-size:12px;color:#5f6368;}
+.glist{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.gitem{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;transition:.15s;}
+.gitem:hover{background:#f1f3f4;}
+.gav{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;}
+.gitem strong{display:block;font-size:14px;color:#202124;}
+.gitem span{font-size:12px;color:#5f6368;}
+.btn-gadd{width:100%;padding:11px;border-radius:6px;border:1px solid #e0e0e0;background:none;font-family:var(--sans);font-size:14px;color:#1a73e8;cursor:pointer;transition:.15s;}
+.btn-gadd:hover{background:#f1f3f4;}
+.gpicker-x{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#5f6368;}
+nav{position:fixed;top:0;left:0;width:100%;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--gb);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:76px;transition:.3s;}
+nav.scrolled{box-shadow:0 4px 28px rgba(0,0,0,.08);}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-logo img{height:62px;object-fit:contain;}
+.nav-brand{font-size:10px;font-weight:600;letter-spacing:3.5px;color:var(--gd);text-transform:uppercase;}
+.nav-links{display:flex;align-items:center;gap:28px;list-style:none;}
+.nav-links a{font-size:13px;font-weight:500;letter-spacing:1px;text-decoration:none;color:var(--black);text-transform:uppercase;position:relative;padding-bottom:2px;transition:.2s;}
+.nav-links a::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:var(--yellow);transition:.3s;}
+.nav-links a:hover::after{width:100%;}
+.btn-nav{background:var(--yellow);color:var(--black);padding:10px 22px;border-radius:2px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;font-family:var(--sans);transition:.2s;}
+.btn-nav:hover{background:#e6be00;}
+.nav-user{display:flex;align-items:center;gap:10px;}
+.nav-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;border:2.5px solid var(--yellow);flex-shrink:0;}
+.nav-uname{font-size:13px;font-weight:500;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-out{background:none;border:1px solid var(--gb);color:var(--gd);padding:7px 14px;border-radius:2px;font-family:var(--sans);font-size:12px;cursor:pointer;transition:.2s;}
+.btn-out:hover{border-color:var(--black);color:var(--black);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;}
+.hamburger span{width:24px;height:2px;background:var(--black);}
+.admin-panel{display:none;position:fixed;inset:0;z-index:900;background:var(--gl);overflow-y:auto;padding:90px 5% 60px;}
+.admin-panel.active{display:block;}
+.admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:16px;}
+.admin-head h1{font-family:var(--serif);font-size:32px;font-weight:300;}
+.admin-head h1 em{font-style:italic;}
+.admin-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.btn-add{background:var(--black);color:var(--white);padding:13px 24px;border-radius:2px;border:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:.2s;}
+.btn-add:hover{background:#333;}
+.btn-back{background:var(--gl);border:1px solid var(--gb);padding:12px 18px;border-radius:2px;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;transition:.2s;}
+.btn-back:hover{background:var(--gb);}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:20px;}
+.admin-empty{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--gd);}
+.admin-empty p{font-family:var(--serif);font-size:22px;font-style:italic;margin-top:14px;}
+.admin-card{background:var(--white);border-radius:6px;overflow:hidden;border:1px solid var(--gb);transition:.2s;}
+.admin-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.card-cover{width:100%;aspect-ratio:16/9;background:var(--black);position:relative;overflow:hidden;}
+.card-cover img{width:100%;height:100%;object-fit:cover;}
+.card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a1a,#333);color:rgba(255,255,255,.2);font-size:40px;}
+.card-cover iframe{width:100%;height:100%;border:none;}
+.card-play-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.38);cursor:pointer;transition:.2s;}
+.card-play-ov:hover{background:rgba(0,0,0,.18);}
+.play-circle{width:50px;height:50px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.card-body{padding:20px;}
+.card-body h3{font-family:var(--serif);font-size:19px;font-weight:400;margin-bottom:6px;}
+.card-meta{font-size:12px;color:var(--gd);margin-bottom:14px;}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-del{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:2px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+.btn-del:hover{background:#fee2e2;}
+.btn-sm{background:var(--gl);border:1px solid var(--gb);padding:8px 14px;border-radius:2px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+.btn-sm:hover{background:var(--gb);}
+.badge-free{display:inline-block;background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;margin-bottom:8px;}
+.badge-paid{display:inline-block;background:#fef9c3;color:#854d0e;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;margin-bottom:8px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gd);margin-bottom:6px;}
+.form-input{width:100%;padding:11px 14px;border:1.5px solid var(--gb);border-radius:4px;font-family:var(--sans);font-size:14px;outline:none;transition:.2s;}
+.form-input:focus{border-color:var(--yellow);}
+.form-select{width:100%;padding:11px 14px;border:1.5px solid var(--gb);border-radius:4px;font-family:var(--sans);font-size:14px;outline:none;background:var(--white);cursor:pointer;}
+.links-wrap{display:flex;flex-direction:column;gap:8px;}
+.link-row{display:flex;gap:8px;align-items:center;}
+.link-row .form-input{flex:1;}
+.btn-rm{background:none;border:1.5px solid var(--gb);padding:9px 12px;border-radius:4px;cursor:pointer;font-size:14px;transition:.2s;}
+.btn-rm:hover{border-color:#dc2626;color:#dc2626;}
+.btn-addlink{background:none;border:1.5px dashed var(--gb);padding:9px 14px;border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;color:var(--gd);transition:.2s;width:100%;margin-top:4px;font-family:var(--sans);}
+.btn-addlink:hover{border-color:var(--yellow);color:var(--black);}
+.img-preview{width:100%;aspect-ratio:16/9;border-radius:4px;overflow:hidden;background:var(--gl);border:1.5px solid var(--gb);display:flex;align-items:center;justify-content:center;margin-top:8px;font-size:28px;color:var(--gd);}
+.img-preview img{width:100%;height:100%;object-fit:cover;}
+.hero{min-height:100vh;display:flex;align-items:center;padding:100px 5% 60px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;right:0;top:0;width:48%;height:100%;background:var(--gl);clip-path:polygon(8% 0,100% 0,100% 100%,0 100%);z-index:0;}
+.hero-glow{position:absolute;right:4%;top:15%;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(255,212,0,.18) 0%,transparent 70%);z-index:1;}
+.hero-content{position:relative;z-index:2;max-width:580px;}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--gd);margin-bottom:28px;}
+.eyebrow::before{content:'';width:30px;height:2px;background:var(--yellow);}
+.hero h1{font-family:var(--serif);font-size:clamp(2.8rem,5.5vw,4.5rem);font-weight:300;line-height:1.12;margin-bottom:12px;}
+.hero h1 em{font-style:italic;}
+.hl{display:inline;position:relative;}
+.hl::after{content:'';position:absolute;bottom:4px;left:0;width:100%;height:8px;background:var(--yellow);opacity:.45;z-index:-1;}
+.hero-sub{font-size:16px;line-height:1.7;color:var(--gd);margin:28px 0 44px;max-width:460px;}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+.btn-primary{background:var(--black);color:var(--white);padding:16px 34px;border-radius:2px;font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:.2s;display:inline-flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:var(--sans);}
+.btn-primary:hover{background:#222;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.18);}
+.btn-sec{font-size:13px;font-weight:600;letter-spacing:1px;color:var(--black);text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:14px 0;border-bottom:2px solid var(--yellow);background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;font-family:var(--sans);transition:.2s;}
+.btn-sec:hover{gap:14px;}
+.hero-side{position:absolute;right:4%;top:50%;transform:translateY(-50%);z-index:2;width:40%;display:flex;flex-direction:column;align-items:center;}
+.hero-vis{width:100%;max-width:440px;aspect-ratio:4/5;background:var(--black);border-radius:4px;position:relative;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.2);}
+.hero-vis-in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a1a1a 0%,#2d2d2d 50%,#111 100%);}
+.cv{position:absolute;left:50%;top:0;transform:translateX(-50%);width:6px;height:100%;background:linear-gradient(to bottom,var(--yellow),rgba(255,212,0,.2));border-radius:3px;}
+.ch{position:absolute;top:35%;left:0;width:100%;height:6px;background:linear-gradient(to right,rgba(255,212,0,.2),var(--yellow),rgba(255,212,0,.2));border-radius:3px;}
+.cglow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;background:radial-gradient(circle,rgba(255,212,0,.15) 0%,transparent 70%);border-radius:50%;}
+.hero-vis-badge{position:absolute;top:24px;right:24px;background:var(--yellow);color:var(--black);padding:8px 14px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.hero-vis-lbl{position:absolute;bottom:28px;left:0;right:0;text-align:center;font-family:var(--serif);font-size:13px;font-style:italic;color:rgba(255,255,255,.5);letter-spacing:2px;}
+.hero-stats{display:flex;width:100%;max-width:440px;border:1px solid var(--gb);border-radius:4px;overflow:hidden;background:var(--white);margin-top:20px;}
+.stat{flex:1;padding:16px;text-align:center;border-right:1px solid var(--gb);}
+.stat:last-child{border-right:none;}
+.stat-n{font-family:var(--serif);font-size:26px;font-weight:600;display:block;line-height:1;}
+.stat-l{font-size:10px;font-weight:500;letter-spacing:1.5px;color:var(--gd);text-transform:uppercase;margin-top:3px;}
+section{padding:100px 5%;}
+.sec-eye{font-size:10px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--gd);display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.sec-eye::after{content:'';flex:1;height:1px;background:var(--gb);max-width:60px;}
+.sec-title{font-family:var(--serif);font-size:clamp(2rem,3.5vw,3rem);font-weight:300;line-height:1.2;margin-bottom:20px;}
+.sec-title em{font-style:italic;}
+.sec-desc{font-size:16px;line-height:1.75;color:var(--gd);max-width:540px;}
+.about{background:var(--gl);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.about-frame{width:100%;aspect-ratio:3/4;background:var(--black);border-radius:4px;position:relative;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.15);}
+.about-in{position:absolute;inset:0;background:linear-gradient(135deg,#1a1a1a 0%,#333 60%,#1a1a1a 100%);display:flex;align-items:center;justify-content:center;}
+.about-q{position:absolute;bottom:0;left:0;right:0;padding:32px;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 100%);}
+.about-q p{font-family:var(--serif);font-size:18px;font-style:italic;line-height:1.5;color:rgba(255,255,255,.9);}
+.about-q cite{font-size:11px;letter-spacing:2px;color:var(--yellow);text-transform:uppercase;margin-top:12px;display:block;}
+.about-badge{position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:var(--yellow);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;box-shadow:0 8px 24px rgba(255,212,0,.4);}
+.afeats{display:flex;flex-direction:column;gap:22px;margin-top:36px;}
+.afeat{display:flex;gap:18px;align-items:flex-start;}
+.feat-ico{width:42px;height:42px;min-width:42px;background:var(--yellow);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.feat-text h4{font-size:15px;font-weight:600;margin-bottom:4px;}
+.feat-text p{font-size:14px;color:var(--gd);line-height:1.6;}
+.courses{background:var(--white);}
+.courses-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:60px;flex-wrap:wrap;gap:24px;}
+.pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;background:var(--gb);border:2px solid var(--gb);}
+.pub-card{background:var(--white);overflow:hidden;transition:.2s;position:relative;}
+.pub-card:hover{background:var(--black);}
+.pub-card:hover .pub-title{color:var(--white);}
+.pub-card:hover .pub-price{color:var(--yellow);}
+.pub-card:hover .pub-meta{color:rgba(255,255,255,.5);}
+.pub-card:hover .pub-cta{color:var(--yellow);border-color:var(--yellow);}
+.pub-cover{width:100%;aspect-ratio:16/9;background:var(--black);position:relative;overflow:hidden;}
+.pub-cover img{width:100%;height:100%;object-fit:cover;}
+.pub-cover iframe{width:100%;height:100%;border:none;pointer-events:none;}
+.pub-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a1a,#333);color:rgba(255,255,255,.2);font-size:36px;}
+.pub-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.38);cursor:pointer;transition:.2s;}
+.pub-ov:hover{background:rgba(0,0,0,.18);}
+.pub-play{width:48px;height:48px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.pub-body{padding:26px;}
+.pub-title{font-family:var(--serif);font-size:20px;font-weight:400;margin-bottom:8px;transition:.2s;}
+.pub-price{font-family:var(--serif);font-size:26px;font-weight:600;transition:.2s;}
+.pub-price.free-price{color:#16a34a;}
+.pub-meta{font-size:13px;color:var(--gd);margin-top:4px;transition:.2s;}
+.pub-cta{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--black);border-bottom:2px solid var(--black);padding-bottom:3px;margin-top:14px;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;font-family:var(--sans);transition:.2s;}
+.pub-cta:hover{gap:14px;}
+.pub-lock{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.75);color:#fff;padding:5px 10px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:4px;}
+.pub-free-badge{position:absolute;top:12px;right:12px;background:#16a34a;color:#fff;padding:5px 10px;border-radius:3px;font-size:11px;font-weight:700;}
+.pub-owned-badge{position:absolute;top:12px;right:12px;background:#7c3aed;color:#fff;padding:5px 10px;border-radius:3px;font-size:11px;font-weight:700;}
+.no-courses{padding:80px 40px;text-align:center;background:var(--white);width:100%;}
+.no-courses p{font-family:var(--serif);font-size:20px;color:var(--gd);font-style:italic;}
+.paywall-modal{max-width:460px;}
+.pw-cover{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;margin-bottom:20px;}
+.pw-title{font-family:var(--serif);font-size:24px;font-weight:300;text-align:center;margin-bottom:8px;}
+.pw-price{font-family:var(--serif);font-size:44px;font-weight:600;text-align:center;margin-bottom:6px;}
+.pw-price sup{font-size:22px;vertical-align:top;margin-top:10px;}
+.pw-sub{font-size:14px;color:var(--gd);text-align:center;margin-bottom:28px;}
+.btn-mp{width:100%;padding:16px;border-radius:6px;background:#009ee3;color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:.2s;margin-bottom:10px;}
+.btn-mp:hover{background:#0081c5;}
+.pw-note{font-size:12px;color:var(--gd);text-align:center;margin-top:8px;}
+.vid-head{padding:18px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gb);}
+.vid-head h3{font-family:var(--serif);font-size:20px;font-weight:400;}
+.vid-tabs{display:flex;gap:2px;padding:10px 20px;background:var(--gl);overflow-x:auto;}
+.vid-tab{padding:7px 16px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1.5px solid var(--gb);background:var(--white);border-radius:2px;transition:.2s;white-space:nowrap;font-family:var(--sans);}
+.vid-tab.active,.vid-tab:hover{background:var(--black);color:var(--white);border-color:var(--black);}
+.vid-player{width:100%;aspect-ratio:16/9;background:#000;}
+.vid-player iframe{width:100%;height:100%;border:none;}
+.testimonials{background:var(--black);padding:100px 5%;}
+.testimonials .sec-eye{color:rgba(255,255,255,.4);}
+.testimonials .sec-eye::after{background:rgba(255,255,255,.15);}
+.testimonials .sec-title{color:var(--white);}
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,.06);margin-top:60px;}
+.test-card{background:var(--black);padding:38px;border:1px solid rgba(255,255,255,.06);transition:.2s;}
+.test-card:hover{border-color:var(--yellow);}
+.test-q{font-family:var(--serif);font-size:76px;line-height:.8;color:var(--yellow);opacity:.4;margin-bottom:14px;display:block;}
+.test-txt{font-family:var(--serif);font-size:17px;font-style:italic;line-height:1.65;color:rgba(255,255,255,.85);margin-bottom:28px;}
+.test-auth{display:flex;align-items:center;gap:12px;}
+.test-av{width:42px;height:42px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;font-weight:600;color:var(--black);}
+.test-info strong{display:block;font-size:14px;color:var(--white);}
+.test-info span{font-size:12px;color:rgba(255,255,255,.4);}
+.test-stars{color:var(--yellow);font-size:13px;letter-spacing:2px;margin-bottom:3px;}
+.cta-band{background:var(--yellow);padding:100px 5%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:48px;}
+.cta-band h2{font-family:var(--serif);font-size:clamp(2rem,3.5vw,2.8rem);font-weight:300;color:var(--black);line-height:1.2;margin-bottom:14px;}
+.cta-band p{font-size:16px;color:rgba(0,0,0,.65);max-width:440px;line-height:1.7;}
+.btn-dark{background:var(--black);color:var(--white);padding:18px 44px;border-radius:2px;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;border:none;cursor:pointer;font-family:var(--sans);transition:.2s;}
+.btn-dark:hover{background:#222;transform:translateY(-2px);}
+.pricing{background:var(--white);}
+.pricing-head{text-align:center;margin-bottom:60px;}
+.pricing-head .sec-eye{justify-content:center;}
+.pricing-head .sec-eye::after{display:none;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--gb);max-width:940px;margin:0 auto;}
+.pc{background:var(--white);padding:44px 32px;}
+.pc.pop{background:var(--black);}
+.pc-name{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gd);margin-bottom:8px;}
+.pc.pop .pc-name{color:rgba(255,255,255,.5);}
+.pc-price{font-family:var(--serif);font-size:50px;font-weight:300;color:var(--black);line-height:1;display:flex;align-items:flex-start;gap:4px;}
+.pc.pop .pc-price{color:var(--white);}
+.pc-price sup{font-size:20px;margin-top:10px;}
+.pc-period{font-size:13px;color:var(--gd);margin:8px 0 28px;}
+.pc.pop .pc-period{color:rgba(255,255,255,.4);}
+.pc-feats{list-style:none;margin-bottom:36px;display:flex;flex-direction:column;gap:10px;}
+.pc-feats li{font-size:14px;color:var(--gd);display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--gb);}
+.pc.pop .pc-feats li{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.08);}
+.pc-feats li::before{content:'checkmark';font-weight:700;color:var(--yellow);min-width:14px;}
+.btn-pc{display:block;text-align:center;padding:15px;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--sans);border:none;transition:.2s;}
+.btn-pc.out{border:2px solid var(--black);color:var(--black);background:none;}
+.btn-pc.out:hover{background:var(--black);color:var(--white);}
+.btn-pc.sol{background:var(--yellow);color:var(--black);}
+.btn-pc.sol:hover{background:#e6be00;}
+.pop-badge{display:inline-block;margin-bottom:18px;background:var(--yellow);color:var(--black);padding:4px 12px;border-radius:1px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.faq{background:var(--gl);}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+.faq-list{display:flex;flex-direction:column;}
+.faq-item{border-bottom:1px solid var(--gb);}
+.faq-q{width:100%;padding:22px 0;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;font-family:var(--sans);font-size:15px;font-weight:500;color:var(--black);text-align:left;gap:20px;}
+.faq-ico{width:28px;height:28px;min-width:28px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:.3s;}
+.faq-item.open .faq-ico{transform:rotate(45deg);}
+.faq-a{font-size:14px;line-height:1.75;color:var(--gd);max-height:0;overflow:hidden;transition:.3s;}
+.faq-item.open .faq-a{max-height:200px;padding-bottom:20px;}
+.faq-contact{background:var(--white);border-radius:4px;padding:38px;border:1px solid var(--gb);}
+.faq-contact h3{font-family:var(--serif);font-size:26px;font-weight:300;margin-bottom:10px;}
+.faq-contact p{font-size:14px;color:var(--gd);line-height:1.7;margin-bottom:24px;}
+.clinks{display:flex;flex-direction:column;gap:14px;}
+.clink{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--black);padding:14px 18px;border:1px solid var(--gb);border-radius:2px;transition:.2s;}
+.clink:hover{border-color:var(--yellow);background:var(--gl);}
+.clink-ico{width:34px;height:34px;background:var(--yellow);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+footer{background:var(--black);color:var(--white);padding:80px 5% 40px;}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:60px;margin-bottom:60px;}
+.footer-logo img{height:54px;object-fit:contain;filter:brightness(0) invert(1);margin-bottom:18px;display:block;}
+.footer-tag{font-family:var(--serif);font-style:italic;font-size:14px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:24px;max-width:240px;}
+.socials{display:flex;gap:8px;}
+.sl{width:34px;height:34px;border:1px solid rgba(255,255,255,.15);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,.5);text-decoration:none;transition:.2s;}
+.sl:hover{border-color:var(--yellow);color:var(--yellow);}
+.fc h4{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:18px;}
+.fc ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.fc ul li a{font-size:14px;color:rgba(255,255,255,.65);text-decoration:none;transition:.2s;}
+.fc ul li a:hover{color:var(--yellow);}
+.footer-bot{border-top:1px solid rgba(255,255,255,.08);padding-top:28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+.footer-bot p{font-size:13px;color:rgba(255,255,255,.3);}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.d1{transition-delay:.1s;}.d2{transition-delay:.2s;}
+.toast{position:fixed;bottom:22px;right:22px;padding:13px 22px;border-radius:6px;font-size:14px;z-index:9999;transform:translateY(60px);opacity:0;transition:.3s;pointer-events:none;max-width:300px;font-family:var(--sans);}
+.toast.show{transform:none;opacity:1;}
+.toast.dark{background:var(--black);color:var(--white);}
+.toast.ok{background:var(--yellow);color:var(--black);}
+.toast.err{background:#dc2626;color:#fff;}
+@media(max-width:1024px){.hero-side,.hero-bg,.hero-glow{display:none;}.about-grid,.faq-grid{grid-template-columns:1fr;gap:48px;}.test-grid{grid-template-columns:1fr;}.pricing-grid{grid-template-columns:1fr;max-width:400px;}.footer-top{grid-template-columns:1fr 1fr;gap:40px;}}
+@media(max-width:768px){.nav-links{display:none;}.hamburger{display:flex;}.nav-links.open{display:flex;flex-direction:column;position:fixed;top:76px;left:0;right:0;background:var(--white);border-top:1px solid var(--gb);padding:28px 5%;gap:20px;box-shadow:0 20px 40px rgba(0,0,0,.1);z-index:99;}.hero{padding:110px 5% 80px;}.cta-band{flex-direction:column;}.footer-top{grid-template-columns:1fr;}.modal{padding:32px 22px;}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal('authOverlay')">&#215;</button>
+    <div id="pMain">
+      <div class="modal-logo"><img src="https://i.ibb.co/HLsmQ391/FAro-1.png" alt="FARO"></div>
+      <h2>Bienvenido a FARO</h2>
+      <p class="modal-sub">Accede o crea tu cuenta gratis</p>
+      <button class="btn-google" onclick="doGoogleLogin()">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="divider"><span>o con correo y contrasena</span></div>
+      <button class="btn-k" onclick="showLogin()">Iniciar sesion con email</button>
+      <div class="modal-link"><a onclick="showRegister()">Crear cuenta nueva gratis</a></div>
+    </div>
+    <div id="pLogin" style="display:none;">
+      <div class="modal-logo"><img src="https://i.ibb.co/HLsmQ391/FAro-1.png" alt="FARO"></div>
+      <h2>Iniciar sesion</h2>
+      <p class="modal-sub">Entra con tu correo y contrasena</p>
+      <div class="modal-err" id="loginErr">Correo o contrasena incorrectos</div>
+      <input class="min-input" type="email" id="loginEmail" placeholder="correo@email.com">
+      <input class="min-input" type="password" id="loginPass" placeholder="Contrasena">
+      <button class="btn-k" onclick="doEmailLogin()">Entrar</button>
+      <div class="modal-link"><a onclick="showMain()">&#8592; Volver</a> &nbsp;&#183;&nbsp; <a onclick="showRegister()">Crear cuenta</a></div>
+    </div>
+    <div id="pRegister" style="display:none;">
+      <div class="modal-logo"><img src="https://i.ibb.co/HLsmQ391/FAro-1.png" alt="FARO"></div>
+      <h2>Crear cuenta</h2>
+      <p class="modal-sub">Registrate gratis</p>
+      <div class="modal-err" id="regErr">Este correo ya esta registrado</div>
+      <input class="min-input" type="text" id="regName" placeholder="Nombre completo">
+      <input class="min-input" type="email" id="regEmail" placeholder="correo@email.com">
+      <input class="min-input" type="password" id="regPass" placeholder="Crear contrasena (min 6 caracteres)">
+      <input class="min-input" type="password" id="regPass2" placeholder="Confirmar contrasena">
+      <button class="btn-y" onclick="doRegister()">Crear cuenta gratis</button>
+      <div class="modal-link"><a onclick="showLogin()">&#8592; Ya tengo cuenta</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- GOOGLE PICKER (Firebase maneja el login real con popup) -->
+
+<!-- PAYWALL MODAL -->
+<div class="overlay" id="paywallOverlay">
+  <div class="modal paywall-modal">
+    <button class="modal-x" onclick="closeModal('paywallOverlay')">&#215;</button>
+    <img id="pwCover" class="pw-cover" src="" alt="" style="display:none;">
+    <div class="pw-title" id="pwTitle">Curso</div>
+    <div class="pw-price"><sup>$</sup><span id="pwPrice">0</span> <span style="font-family:var(--sans);font-size:16px;font-weight:400;color:var(--gd);">USD</span></div>
+    <p class="pw-sub">Adquiere este curso para acceder a todo el contenido</p>
+    <button class="btn-mp" onclick="goToMP()">
+      <svg width="24" height="24" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="#009ee3"/><text x="22" y="29" text-anchor="middle" font-size="14" font-weight="bold" fill="white">MP</text></svg>
+      Pagar con Mercado Pago
+    </button>
+    <p class="pw-note">&#128274; Pago 100% seguro procesado por Mercado Pago</p>
+    <p class="pw-note">Una vez configurado el pago, tu acceso se activa automaticamente.</p>
+  </div>
+</div>
+
+<!-- COURSE FORM -->
+<div class="overlay" id="courseFormOverlay">
+  <div class="modal modal-wide">
+    <button class="modal-x" onclick="closeModal('courseFormOverlay')">&#215;</button>
+    <h2 style="font-family:var(--serif);font-size:26px;font-weight:300;text-align:left;margin-bottom:22px;">Nuevo Curso</h2>
+    <div class="form-group">
+      <label class="form-label">Nombre del Curso</label>
+      <input class="form-input" type="text" id="cName" placeholder="Ej: Introduccion a la Teologia del Cuerpo">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de acceso</label>
+      <select class="form-select" id="cType" onchange="togglePriceField()">
+        <option value="free">Gratuito</option>
+        <option value="paid">De pago</option>
+      </select>
+    </div>
+    <div class="form-group" id="priceGroup" style="display:none;">
+      <label class="form-label">Precio (USD)</label>
+      <input class="form-input" type="number" id="cPrice" placeholder="29" min="1" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Imagen de portada - link de ImgBB</label>
+      <input class="form-input" type="url" id="cCover" placeholder="https://i.ibb.co/xxxxxxxx/imagen.jpg" oninput="previewCover()">
+      <div class="img-preview" id="coverPreview">&#128444;</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Videos del Curso (YouTube)</label>
+      <div class="links-wrap" id="linksWrap">
+        <div class="link-row">
+          <input class="form-input" type="url" placeholder="https://youtube.com/watch?v=...">
+        </div>
+      </div>
+      <button class="btn-addlink" onclick="addLink()">+ Agregar otro video</button>
+    </div>
+    <button class="btn-y" onclick="saveCourse()">Guardar y Publicar Curso</button>
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="overlay" id="vidOverlay">
+  <div class="modal modal-video">
+    <div class="vid-head">
+      <h3 id="vidTitle">Curso</h3>
+      <button class="modal-x" style="position:static;" onclick="closeVid()">&#215;</button>
+    </div>
+    <div class="vid-tabs" id="vidTabs"></div>
+    <div class="vid-player"><iframe id="vidPlayer" src="" allowfullscreen allow="autoplay;encrypted-media"></iframe></div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <img src="https://i.ibb.co/HLsmQ391/FAro-1.png" alt="FARO">
+    <span class="nav-brand">Teologia del Cuerpo</span>
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#cursos">Cursos</a></li>
+    <li><a href="#nosotros">Nosotros</a></li>
+    <li><a href="#precios">Precios</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li id="liLogin"><button class="btn-nav" onclick="openModal('authOverlay')">Iniciar sesion</button></li>
+    <li id="liUser" style="display:none;">
+      <div class="nav-user">
+        <div class="nav-av" id="navAv"></div>
+        <span class="nav-uname" id="navUname"></span>
+        <button class="btn-out" onclick="logout()">Salir</button>
+      </div>
+    </li>
+    <li id="liAdmin" style="display:none;">
+      <button class="btn-nav" style="background:var(--black);color:var(--white);" onclick="openAdmin()">Admin</button>
+    </li>
+  </ul>
+  <button class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-head">
+    <div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gd);margin-bottom:8px;">Panel de Administracion</div>
+      <h1>Gestion de <em>Cursos</em></h1>
+    </div>
+    <div class="admin-btns">
+      <button class="btn-add" onclick="openModal('courseFormOverlay')">+ Nuevo Curso</button>
+      <button class="btn-back" onclick="closeAdmin()">&#8592; Volver al sitio</button>
+    </div>
+  </div>
+  <div class="admin-grid" id="adminGrid"></div>
+</div>
+
+<!-- MAIN SITE -->
+<div id="mainSite">
+<section class="hero">
+  <div class="hero-bg"></div><div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="eyebrow">Formacion Integral Catolica</div>
+    <h1>Descubre la<br><em>verdad profunda</em><br>del <span class="hl">cuerpo humano</span></h1>
+    <p class="hero-sub">Explora la Teologia del Cuerpo de Juan Pablo II con profundidad, rigor y una pedagogia pensada para transformar tu vida y relaciones.</p>
+    <div class="hero-cta">
+      <a href="#cursos" class="btn-primary">Ver Cursos &#8594;</a>
+      <button class="btn-sec" onclick="openModal('authOverlay')">Crear cuenta gratis</button>
+    </div>
+  </div>
+  <div class="hero-side">
+    <div class="hero-vis">
+      <div class="hero-vis-in">
+        <div style="position:relative;width:110px;height:130px;">
+          <div class="cglow"></div><div class="cv"></div><div class="ch"></div>
+        </div>
+      </div>
+      <div class="hero-vis-badge">Nuevo 2025</div>
+      <div class="hero-vis-lbl">Hombre y Mujer los creo</div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-n" id="statCourses">0</span><div class="stat-l">Cursos</div></div>
+      <div class="stat"><span class="stat-n">+500</span><div class="stat-l">Alumnos</div></div>
+      <div class="stat"><span class="stat-n">98%</span><div class="stat-l">Satisfaccion</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="about" id="nosotros">
+  <div class="about-grid">
+    <div class="reveal" style="position:relative;">
+      <div class="about-frame">
+        <div class="about-in"><div style="font-size:80px;opacity:.08;">&#10013;</div></div>
+        <div class="about-q">
+          <p>"El cuerpo expresa a la persona, y la persona es siempre imagen de Dios."</p>
+          <cite>- Juan Pablo II</cite>
+        </div>
+      </div>
+      <div class="about-badge"><span style="font-size:20px;font-family:var(--serif);">10</span><span>anos de<br>formacion</span></div>
+    </div>
+    <div class="reveal d2">
+      <div class="sec-eye">Quienes somos</div>
+      <h2 class="sec-title">Un faro en la <em>oscuridad cultural</em></h2>
+      <p class="sec-desc">FARO nacio para iluminar a familias, jovenes y parejas con la vision autentica de la persona humana segun el plan de Dios. Creemos que la Teologia del Cuerpo es una de las respuestas mas poderosas a los desafios de nuestra epoca.</p>
+      <div class="afeats">
+        <div class="afeat"><div class="feat-ico">&#128214;</div><div class="feat-text"><h4>Fundamentacion Biblica y Filosofica</h4><p>Cada curso se ancla en la Sagrada Escritura y la tradicion filosofica perenne.</p></div></div>
+        <div class="afeat"><div class="feat-ico">&#127891;</div><div class="feat-text"><h4>Instructores Certificados</h4><p>Certificados por el Instituto Juan Pablo II en Washington D.C.</p></div></div>
+        <div class="afeat"><div class="feat-ico">&#127758;</div><div class="feat-text"><h4>Comunidad en Espanol</h4><p>La mayor plataforma de TdC en espanol para Latinoamerica y Espana.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="courses" id="cursos">
+  <div class="courses-head reveal">
+    <div>
+      <div class="sec-eye">Formacion</div>
+      <h2 class="sec-title">Nuestros <em>Cursos</em></h2>
+    </div>
+    <p class="sec-desc" style="max-width:340px;">Formacion profunda para transformar tu vida desde la verdad del cuerpo humano.</p>
+  </div>
+  <div class="pub-grid" id="pubGrid">
+    <div class="no-courses" id="noCoursesMsg"><p>Los cursos apareceran aqui una vez sean publicados.</p></div>
+  </div>
+</section>
+
+<section class="testimonials">
+  <div class="sec-eye">Testimonios</div>
+  <h2 class="sec-title">Lo que dicen nuestros <em>alumnos</em></h2>
+  <div class="test-grid">
+    <div class="test-card reveal"><span class="test-q">"</span><p class="test-txt">Este curso transformo completamente mi vision del matrimonio. La profundidad teologica, combinada con la accesibilidad del contenido, es simplemente unica.</p><div class="test-auth"><div class="test-av">AM</div><div class="test-info"><div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><strong>Ana Maria Perez</strong><span>Madre de familia, Mexico</span></div></div></div>
+    <div class="test-card reveal d1"><span class="test-q">"</span><p class="test-txt">Como director de pastoral juvenil, el curso de certificacion me dio todas las herramientas para llevar esta formacion a cientos de jovenes.</p><div class="test-auth"><div class="test-av">CR</div><div class="test-info"><div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><strong>Carlos Ruiz</strong><span>Pastoral Juvenil, Colombia</span></div></div></div>
+    <div class="test-card reveal d2"><span class="test-q">"</span><p class="test-txt">Nunca imagine que podria entender tan profundamente el plan de Dios para mi cuerpo. FARO me dio un lenguaje para lo que sentia en el corazon.</p><div class="test-auth"><div class="test-av">SL</div><div class="test-info"><div class="test-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><strong>Sofia Lopez</strong><span>Estudiante, Espana</span></div></div></div>
+  </div>
+</section>
+
+<div class="cta-band">
+  <div>
+    <h2>Listo para comenzar tu <em>formacion</em>?</h2>
+    <p>Unete a mas de 500 personas que ya estan descubriendo la belleza y verdad del cuerpo humano.</p>
+  </div>
+  <button class="btn-dark" onclick="openModal('authOverlay')">Crear Cuenta Gratis &#8594;</button>
+</div>
+
+<section class="pricing" id="precios">
+  <div class="pricing-head reveal">
+    <div class="sec-eye">Inversion</div>
+    <h2 class="sec-title">Planes de <em>Formacion</em></h2>
+    <p class="sec-desc" style="margin:0 auto;text-align:center;">Acceso flexible segun tus necesidades.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pc reveal"><div class="pc-name">Explorador</div><div class="pc-price"><sup>$</sup>29</div><div class="pc-period">por curso individual</div><ul class="pc-feats"><li>Acceso a 1 curso</li><li>Videos HD</li><li>Material PDF</li><li>Certificado</li><li>Soporte email</li></ul><button class="btn-pc out" onclick="openModal('authOverlay')">Comenzar</button></div>
+    <div class="pc pop reveal d1"><div class="pop-badge">Mas Popular</div><div class="pc-name">Peregrino</div><div class="pc-price"><sup>$</sup>79</div><div class="pc-period">por mes - acceso total</div><ul class="pc-feats"><li>Todos los cursos</li><li>Nuevos cursos cada mes</li><li>Comunidad privada</li><li>Sesiones en vivo</li><li>Certificados ilimitados</li><li>Soporte prioritario</li></ul><button class="btn-pc sol" onclick="openModal('authOverlay')">Inscribirse</button></div>
+    <div class="pc reveal d2"><div class="pc-name">Formador</div><div class="pc-price"><sup>$</sup>249</div><div class="pc-period">por ano - todo incluido</div><ul class="pc-feats"><li>Todo lo del Peregrino</li><li>Certificacion FARO</li><li>Materiales para grupos</li><li>Mentoria individual</li><li>Licencia para ensenar</li><li>Red de formadores</li></ul><button class="btn-pc out" onclick="openModal('authOverlay')">Inscribirse</button></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="faq-grid">
+    <div>
+      <div class="sec-eye reveal">Preguntas</div>
+      <h2 class="sec-title reveal">Respuestas a tus <em>dudas</em></h2>
+      <div class="faq-list reveal">
+        <div class="faq-item"><button class="faq-q" onclick="tFaq(this)">Necesito conocimientos previos de teologia?<span class="faq-ico">+</span></button><div class="faq-a">No, nuestros cursos estan disenados para cualquier persona. Explicamos todo desde cero con lenguaje accesible.</div></div>
+        <div class="faq-item"><button class="faq-q" onclick="tFaq(this)">Como accedo al contenido?<span class="faq-ico">+</span></button><div class="faq-a">Crea tu cuenta y adquiere el curso. El acceso es inmediato desde cualquier dispositivo.</div></div>
+        <div class="faq-item"><button class="faq-q" onclick="tFaq(this)">Los cursos tienen fecha limite?<span class="faq-ico">+</span></button><div class="faq-a">No. Al adquirir un curso el acceso es de por vida.</div></div>
+        <div class="faq-item"><button class="faq-q" onclick="tFaq(this)">Hay politica de devolucion?<span class="faq-ico">+</span></button><div class="faq-a">Si, garantia de satisfaccion de 7 dias con devolucion del 100%.</div></div>
+      </div>
+    </div>
+    <div class="faq-contact reveal d1">
+      <h3>Tienes mas <em>preguntas</em>?</h3>
+      <p>Estamos aqui para ayudarte. Respondemos en menos de 24 horas.</p>
+      <div class="clinks">
+        <a href="/cdn-cgi/l/email-protection#21494e4d40614740534e0f444554" class="clink"><div class="clink-ico">&#9993;</div><span><span class="__cf_email__" data-cfemail="f59d9a9994b59394879adb909180">[email&#160;protected]</span></span></a>
+        <a href="#" class="clink"><div class="clink-ico">&#128172;</div><span>WhatsApp disponible</span></a>
+        <a href="#" class="clink"><div class="clink-ico">&#128197;</div><span>Agenda una llamada</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo"><img src="https://i.ibb.co/HLsmQ391/FAro-1.png" alt="FARO"></div>
+      <p class="footer-tag">Iluminando mentes y corazones con la verdad del cuerpo humano.</p>
+      <div class="socials"><a href="#" class="sl">f</a><a href="#" class="sl">in</a><a href="#" class="sl">yt</a><a href="#" class="sl">ig</a></div>
+    </div>
+    <div class="fc"><h4>Cursos</h4><ul><li><a href="#">Introduccion TdC</a></li><li><a href="#">Amor Esponsal</a></li><li><a href="#">Para Jovenes</a></li><li><a href="#">Paternidad</a></li></ul></div>
+    <div class="fc"><h4>FARO</h4><ul><li><a href="#">Sobre nosotros</a></li><li><a href="#">Blog</a></li><li><a href="#">Contacto</a></li></ul></div>
+    <div class="fc"><h4>Legal</h4><ul><li><a href="#">Terminos de uso</a></li><li><a href="#">Privacidad</a></li><li><a href="#">Reembolsos</a></li></ul></div>
+  </div>
+  <div class="footer-bot">
+    <p>2025 FARO - Teologia del Cuerpo. Todos los derechos reservados.</p>
+    <p>Hecho con fe para la gloria de Dios</p>
+  </div>
+</footer>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+         signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBR0UqRHfXSrwugMNymMCBysKZE6zjKifw",
+  authDomain: "faro-72048.firebaseapp.com",
+  projectId: "faro-72048",
+  storageBucket: "faro-72048.firebasestorage.app",
+  messagingSenderId: "384720004319",
+  appId: "1:384720004319:web:86995107daa5afc142756a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// Exponer funciones de Firebase al scope global
+window._fbAuth = auth;
+window._fbDb = db;
+window._fbProvider = provider;
+window._fbSignIn = signInWithEmailAndPassword;
+window._fbCreateUser = createUserWithEmailAndPassword;
+window._fbSignInWithPopup = signInWithPopup;
+window._fbSignOut = signOut;
+window._fbDoc = doc;
+window._fbSetDoc = setDoc;
+window._fbGetDoc = getDoc;
+window._fbCollection = collection;
+window._fbGetDocs = getDocs;
+window._fbDeleteDoc = deleteDoc;
+
+// Detectar sesion activa al cargar
+onAuthStateChanged(auth, async (firebaseUser) => {
+  if (firebaseUser) {
+    try {
+      const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
+      const data = snap.exists() ? snap.data() : {};
+      const name = data.name || firebaseUser.displayName || firebaseUser.email.split('@')[0];
+      const isAdmin = firebaseUser.email.toLowerCase() === ADMIN_EMAIL;
+      user = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        name,
+        isAdmin,
+        color: getColor(firebaseUser.email),
+        initials: getInitials(name)
+      };
+      // Cargar compras desde Firestore
+      await loadPurchasesFromFirestore();
+      loginSuccess(user, true);
+    } catch(e) { console.error('Error al cargar usuario:', e); }
+  } else {
+    user = null;
+    renderNav();
+  }
+});
+
+// Cargar cursos desde Firestore al iniciar
+async function loadCoursesFromFirestore() {
+  try {
+    const snap = await getDocs(collection(db, 'courses'));
+    courses = [];
+    snap.forEach(d => courses.push({ firestoreId: d.id, ...d.data() }));
+    // Ordenar por fecha de creacion
+    courses.sort((a,b) => (a.id||0) - (b.id||0));
+    renderPublic();
+    renderAdmin();
+    updateStat();
+  } catch(e) { console.error('Error al cargar cursos:', e); }
+}
+
+async function loadPurchasesFromFirestore() {
+  if (!user) return;
+  try {
+    const snap = await getDocs(collection(db, 'purchases'));
+    purchased = {};
+    snap.forEach(d => {
+      const data = d.data();
+      if (!purchased[data.userEmail]) purchased[data.userEmail] = [];
+      purchased[data.userEmail].push(data.courseId);
+    });
+  } catch(e) { console.error('Error al cargar compras:', e); }
+}
+
+window._loadCoursesFromFirestore = loadCoursesFromFirestore;
+window._loadPurchasesFromFirestore = loadPurchasesFromFirestore;
+
+// Inicializar
+loadCoursesFromFirestore();
+</script>
+
+<script>
+const ADMIN_EMAIL='lcrak6@gmail.com';
+const COLORS=['#4285F4','#EA4335','#34A853','#FBBC05','#7c3aed','#db2777','#0891b2','#d97706'];
+let user=null;
+let courses=[];
+let purchased={};
+
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');if(id==='courseFormOverlay')resetCourseForm();}
+function toast(msg,type='dark'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>{t.className='toast';},3200);}
+function embedUrl(url){if(!url)return'';const m1=url.match(/[?&]v=([^&]+)/);const m2=url.match(/youtu\.be\/([^?]+)/);const m3=url.match(/embed\/([^?]+)/);let id=m1?m1[1]:m2?m2[1]:m3?m3[1]:'';if(id)return'https://www.youtube-nocookie.com/embed/'+id+'?rel=0';const v=url.match(/vimeo\.com\/(\d+)/);if(v)return'https://player.vimeo.com/video/'+v[1];return url;}
+function getInitials(name){if(!name)return'??';return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function getColor(str){let h=0;for(let c of str)h=(h+c.charCodeAt(0))%COLORS.length;return COLORS[h];}
+function hasPurchased(cid){if(!user)return false;if(user.isAdmin)return true;return(purchased[user.email]||[]).includes(cid);}
+
+// Guardar curso en Firestore
+async function saveCourseToFirestore(courseData) {
+  const id = Date.now();
+  await _fbSetDoc(_fbDoc(_fbDb, 'courses', String(id)), { ...courseData, id });
+  return id;
+}
+
+// Eliminar curso de Firestore
+async function deleteCourseFromFirestore(firestoreId) {
+  await _fbDeleteDoc(_fbDoc(_fbDb, 'courses', String(firestoreId)));
+}
+
+// Google Login real con Firebase
+window.doGoogleLogin = async function() {
+  try {
+    await _fbSignInWithPopup(_fbAuth, _fbProvider);
+    closeModal('authOverlay');
+  } catch(e) {
+    console.error('Error Google login:', e);
+    toast('Error al iniciar sesion con Google: ' + (e.message||''), 'err');
+  }
+};
+
+function showMain(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pMain').style.display='';}
+function showLogin(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pLogin').style.display='';document.getElementById('loginErr').style.display='none';}
+function showRegister(){['pMain','pLogin','pRegister'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('pRegister').style.display='';document.getElementById('regErr').style.display='none';}
+
+async function doEmailLogin(){
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').style.display='none';
+  try {
+    await _fbSignIn(_fbAuth, email, pass);
+    closeModal('authOverlay');
+  } catch(e) {
+    document.getElementById('loginErr').style.display='block';
+  }
+}
+
+async function doRegister(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('regPass').value;
+  const pass2=document.getElementById('regPass2').value;
+  const errEl=document.getElementById('regErr');
+  errEl.style.display='none';
+  if(!name||!email||!pass){errEl.textContent='Completa todos los campos.';errEl.style.display='block';return;}
+  if(pass.length<6){errEl.textContent='La contrasena debe tener al menos 6 caracteres.';errEl.style.display='block';return;}
+  if(pass!==pass2){errEl.textContent='Las contrasenas no coinciden.';errEl.style.display='block';return;}
+  try {
+    const cred = await _fbCreateUser(_fbAuth, email, pass);
+    await _fbSetDoc(_fbDoc(_fbDb, 'users', cred.user.uid), { name, email });
+    closeModal('authOverlay');
+    toast('Cuenta creada! Bienvenido a FARO','ok');
+  } catch(e) {
+    errEl.textContent = e.code==='auth/email-already-in-use'?'Este correo ya esta registrado.':'Error al crear cuenta: '+(e.message||'');
+    errEl.style.display='block';
+  }
+}
+
+function renderNav(){
+  if(user){
+    document.getElementById('liLogin').style.display='none';
+    document.getElementById('liUser').style.display='';
+    const av=document.getElementById('navAv');
+    av.textContent=user.initials||user.name[0].toUpperCase();
+    av.style.background=user.color;
+    document.getElementById('navUname').textContent=user.name;
+    document.getElementById('liAdmin').style.display=user.isAdmin?'':'none';
+  } else {
+    document.getElementById('liLogin').style.display='';
+    document.getElementById('liUser').style.display='none';
+    document.getElementById('liAdmin').style.display='none';
+  }
+}
+
+function loginSuccess(u, silent=false){
+  user=u;
+  closeModal('authOverlay');
+  renderNav();
+  renderPublic();
+  if(!silent){
+    if(u.isAdmin) toast('Bienvenido admin Juan Pablo!','ok');
+    else toast('Bienvenido, '+u.name+'!','ok');
+  }
+}
+
+function logout(){
+  _fbSignOut(_fbAuth);
+  user=null;
+  purchased={};
+  renderNav();
+  closeAdmin();
+  renderPublic();
+  toast('Sesion cerrada');
+}
+
+function openAdmin(){document.getElementById('adminPanel').classList.add('active');document.getElementById('mainSite').style.display='none';renderAdmin();}
+function closeAdmin(){document.getElementById('adminPanel').classList.remove('active');document.getElementById('mainSite').style.display='';}
+function renderAdmin(){
+  const grid=document.getElementById('adminGrid');
+  if(!courses.length){grid.innerHTML='<div class="admin-empty"><div style="font-size:48px;">📚</div><p>No hay cursos todavia. Crea el primero!</p></div>';return;}
+  grid.innerHTML=courses.map((c,i)=>{
+    const em=c.videos&&c.videos.length?embedUrl(c.videos[0]):'';
+    let th;
+    if(c.cover){th='<img src="'+c.cover+'" alt="'+c.name+'" onerror="this.parentElement.innerHTML=\'<div class=card-ph>🎬</div>\'">'+'<div class="card-play-ov" onclick="openVid('+i+')"><div class="play-circle">▶</div></div>';}
+    else if(em){th='<iframe src="'+em+'" tabindex="-1"></iframe><div class="card-play-ov" onclick="openVid('+i+')"><div class="play-circle">▶</div></div>';}
+    else{th='<div class="card-ph">🎬</div>';}
+    const badge=c.type==='free'?'<span class="badge-free">Gratuito</span>':'<span class="badge-paid">$'+c.price+' USD</span>';
+    return '<div class="admin-card"><div class="card-cover">'+th+'</div><div class="card-body">'+badge+'<h3>'+c.name+'</h3><div class="card-meta">'+c.videos.length+' video'+(c.videos.length!==1?'s':'')+'</div><div class="card-actions"><button class="btn-del" onclick="delCourse('+i+')">Eliminar</button><button class="btn-sm" onclick="openVid('+i+')">Ver</button></div></div></div>';
+  }).join('');
+}
+async function delCourse(i){
+  if(!confirm('Eliminar "'+courses[i].name+'"?'))return;
+  const fid=courses[i].firestoreId||String(courses[i].id);
+  try {
+    await deleteCourseFromFirestore(fid);
+    courses.splice(i,1);renderAdmin();renderPublic();updateStat();toast('Curso eliminado');
+  } catch(e) {
+    toast('Error al eliminar: '+(e.message||e),'err');
+  }
+}
+
+function togglePriceField(){document.getElementById('priceGroup').style.display=document.getElementById('cType').value==='paid'?'':'none';}
+function previewCover(){
+  const url=document.getElementById('cCover').value.trim();
+  const prev=document.getElementById('coverPreview');
+  if(url){prev.innerHTML='<img src="'+url+'" alt="portada" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'No se pudo cargar\'">';}
+  else{prev.innerHTML='🖼️';}
+}
+function addLink(){const w=document.getElementById('linksWrap');const d=document.createElement('div');d.className='link-row';d.innerHTML='<input class="form-input" type="url" placeholder="https://youtube.com/watch?v=..."><button class="btn-rm" onclick="this.parentElement.remove()">x</button>';w.appendChild(d);}
+function resetCourseForm(){document.getElementById('cName').value='';document.getElementById('cPrice').value='';document.getElementById('cCover').value='';document.getElementById('coverPreview').innerHTML='🖼️';document.getElementById('cType').value='free';document.getElementById('priceGroup').style.display='none';document.getElementById('linksWrap').innerHTML='<div class="link-row"><input class="form-input" type="url" placeholder="https://youtube.com/watch?v=..."></div>';}
+async function saveCourse(){
+  const name=document.getElementById('cName').value.trim();
+  const type=document.getElementById('cType').value;
+  const price=type==='paid'?parseFloat(document.getElementById('cPrice').value)||0:0;
+  const cover=document.getElementById('cCover').value.trim();
+  const vids=[...document.querySelectorAll('#linksWrap .form-input')].map(i=>i.value.trim()).filter(Boolean);
+  if(!name){toast('Escribe el nombre del curso','err');return;}
+  if(type==='paid'&&!price){toast('Escribe el precio','err');return;}
+  if(!vids.length){toast('Agrega al menos un video','err');return;}
+  const courseData={name,type,price,cover,videos:vids};
+  try {
+    const id=await saveCourseToFirestore(courseData);
+    courses.push({firestoreId:String(id),id,...courseData});
+    closeModal('courseFormOverlay');renderAdmin();renderPublic();updateStat();toast('"'+name+'" publicado!','ok');
+  } catch(e) {
+    toast('Error al guardar: '+(e.message||e),'err');
+  }
+}
+
+function renderPublic(){
+  const grid=document.getElementById('pubGrid');
+  const nm=document.getElementById('noCoursesMsg');
+  if(!courses.length){grid.innerHTML='';nm.style.display='';grid.appendChild(nm);return;}
+  nm.style.display='none';
+  grid.innerHTML=courses.map((c,i)=>{
+    const isFree=c.type==='free';
+    const canAccess=isFree||(user&&user.isAdmin)||hasPurchased(c.id);
+    let coverHtml;
+    if(c.cover){coverHtml='<img src="'+c.cover+'" alt="'+c.name+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">';}
+    else if(c.videos&&c.videos.length){coverHtml='<iframe src="'+embedUrl(c.videos[0])+'" tabindex="-1"></iframe>';}
+    else{coverHtml='<div class="pub-ph">🎬</div>';}
+    const lockBadge=isFree?'<div class="pub-free-badge">Gratis</div>':(canAccess?'<div class="pub-owned-badge">Adquirido</div>':'<div class="pub-lock">🔒 De pago</div>');
+    const priceHtml=isFree?'<div class="pub-price free-price">Gratis</div>':'<div class="pub-price">$'+c.price+'<span> USD</span></div>';
+    const ctaLabel=canAccess?'Ver curso &rarr;':(user?'Comprar &rarr;':'Iniciar sesion &rarr;');
+    const ctaAction=canAccess?'openVid('+i+')':(user?'openPaywall('+i+')':'openModal(\'authOverlay\')');
+    const ovHtml=canAccess?'<div class="pub-ov" onclick="'+ctaAction+'"><div class="pub-play">&#9658;</div></div>':'';
+    return '<div class="pub-card"><div class="pub-cover">'+coverHtml+ovHtml+lockBadge+'</div><div class="pub-body"><h3 class="pub-title">'+c.name+'</h3>'+priceHtml+'<div class="pub-meta">'+c.videos.length+' video'+(c.videos.length!==1?'s':'')+'</div><button class="pub-cta" onclick="'+ctaAction+'">'+ctaLabel+'</button></div></div>';
+  }).join('');
+}
+function updateStat(){document.getElementById('statCourses').textContent=courses.length;}
+
+function openPaywall(i){
+  if(!user){openModal('authOverlay');return;}
+  const c=courses[i];
+  document.getElementById('pwTitle').textContent=c.name;
+  document.getElementById('pwPrice').textContent=c.price;
+  const img=document.getElementById('pwCover');
+  if(c.cover){img.src=c.cover;img.style.display='block';}else{img.style.display='none';}
+  document.getElementById('paywallOverlay')._idx=i;
+  openModal('paywallOverlay');
+}
+async function goToMP(){
+  const i=document.getElementById('paywallOverlay')._idx;
+  const c=courses[i];
+  // Guardar compra en Firestore
+  try {
+    const purchaseId=user.uid+'_'+c.id;
+    await _fbSetDoc(_fbDoc(_fbDb,'purchases',purchaseId),{userId:user.uid,userEmail:user.email,courseId:c.id,date:new Date().toISOString()});
+    if(!purchased[user.email])purchased[user.email]=[];
+    if(!purchased[user.email].includes(c.id)){purchased[user.email].push(c.id);}
+  } catch(e) { console.error('Error guardando compra:',e); }
+  closeModal('paywallOverlay');
+  renderPublic();
+  toast('Curso "'+c.name+'" desbloqueado!','ok');
+  setTimeout(()=>openVid(i),600);
+}
+
+function openVid(i){
+  const c=courses[i];if(!c)return;
+  document.getElementById('vidTitle').textContent=c.name;
+  document.getElementById('vidTabs').innerHTML=c.videos.map((v,j)=>'<button class="vid-tab '+(j===0?'active':'')+'" onclick="switchVid('+i+','+j+',this)">Video '+(j+1)+'</button>').join('');
+  document.getElementById('vidPlayer').src=embedUrl(c.videos[0])||'';
+  openModal('vidOverlay');
+}
+function switchVid(ci,vi,btn){document.querySelectorAll('.vid-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('vidPlayer').src=embedUrl(courses[ci].videos[vi])||'';}
+function closeVid(){document.getElementById('vidPlayer').src='';closeModal('vidOverlay');}
+
+window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',scrollY>20));
+function toggleMenu(){document.getElementById('navLinks').classList.toggle('open');}
+function tFaq(btn){const item=btn.closest('.faq-item'),was=item.classList.contains('open');document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));if(!was)item.classList.add('ope
