@@ -589,15 +589,11 @@ footer{background:var(--black);color:var(--white);padding:80px 5% 40px;}
 </footer>
 </div>
 
-<!-- Firebase SDKs - Todo en un solo script module -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-         signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<!-- Firebase SDKs via CDN (sin type=module para compatibilidad con GitHub Pages) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 // ── Firebase init ──────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyBR0UqRHfXSrwugMNymMCBysKZE6zjKifw",
@@ -607,10 +603,10 @@ const firebaseConfig = {
   messagingSenderId: "384720004319",
   appId: "1:384720004319:web:86995107daa5afc142756a"
 };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();
 
 // ── Estado global ──────────────────────────────────────────────
 const ADMIN_EMAIL = 'lcrak6@gmail.com';
@@ -634,7 +630,7 @@ function hasPurchased(cid){if(!user)return false;if(user.isAdmin)return true;ret
 // ── Firestore: cursos ──────────────────────────────────────────
 async function loadCoursesFromFirestore(){
   try{
-    const snap=await getDocs(collection(db,'courses'));
+    const snap=await db.collection('courses').get();
     courses=[];
     snap.forEach(d=>courses.push({firestoreId:d.id,...d.data()}));
     courses.sort((a,b)=>(a.id||0)-(b.id||0));
@@ -645,7 +641,7 @@ async function loadCoursesFromFirestore(){
 async function loadPurchasesFromFirestore(){
   if(!user)return;
   try{
-    const snap=await getDocs(collection(db,'purchases'));
+    const snap=await db.collection('purchases').get();
     purchased={};
     snap.forEach(d=>{
       const data=d.data();
@@ -656,10 +652,10 @@ async function loadPurchasesFromFirestore(){
 }
 
 // ── Auth ───────────────────────────────────────────────────────
-onAuthStateChanged(auth, async(firebaseUser)=>{
+auth.onAuthStateChanged(async(firebaseUser)=>{
   if(firebaseUser){
     try{
-      const snap=await getDoc(doc(db,'users',firebaseUser.uid));
+      const snap=await db.collection('users').doc(firebaseUser.uid).get();
       const data=snap.exists()?snap.data():{};
       const name=data.name||firebaseUser.displayName||firebaseUser.email.split('@')[0];
       const isAdmin=firebaseUser.email.toLowerCase()===ADMIN_EMAIL;
@@ -696,7 +692,7 @@ function loginSuccess(u,silent=false){
 
 // ── Funciones globales de auth ─────────────────────────────────
 window.doGoogleLogin = async function(){
-  try{await signInWithPopup(auth,provider);closeModal('authOverlay');}
+  try{await auth.signInWithPopup(provider);closeModal('authOverlay');}
   catch(e){toast('Error con Google: '+(e.message||e),'err');}
 };
 
@@ -704,7 +700,7 @@ window.doEmailLogin = async function(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPass').value;
   document.getElementById('loginErr').style.display='none';
-  try{await signInWithEmailAndPassword(auth,email,pass);closeModal('authOverlay');}
+  try{await auth.signInWithEmailAndPassword(email,pass);closeModal('authOverlay');}
   catch(e){document.getElementById('loginErr').style.display='block';}
 };
 
@@ -719,8 +715,8 @@ window.doRegister = async function(){
   if(pass.length<6){errEl.textContent='La contrasena debe tener al menos 6 caracteres.';errEl.style.display='block';return;}
   if(pass!==pass2){errEl.textContent='Las contrasenas no coinciden.';errEl.style.display='block';return;}
   try{
-    const cred=await createUserWithEmailAndPassword(auth,email,pass);
-    await setDoc(doc(db,'users',cred.user.uid),{name,email});
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await db.collection('users').doc(cred.user.uid).set({name,email});
     closeModal('authOverlay');toast('Cuenta creada! Bienvenido a FARO','ok');
   }catch(e){
     errEl.textContent=e.code==='auth/email-already-in-use'?'Este correo ya esta registrado.':'Error: '+(e.message||'');
@@ -729,7 +725,7 @@ window.doRegister = async function(){
 };
 
 window.logout = function(){
-  signOut(auth);user=null;purchased={};renderNav();closeAdmin();renderPublic();toast('Sesion cerrada');
+  auth.signOut();user=null;purchased={};renderNav();closeAdmin();renderPublic();toast('Sesion cerrada');
 };
 
 // ── Funciones globales de UI ───────────────────────────────────
@@ -775,7 +771,7 @@ window.delCourse = async function(i){
   if(!confirm('Eliminar "'+courses[i].name+'"?'))return;
   const fid=courses[i].firestoreId||String(courses[i].id);
   try{
-    await deleteDoc(doc(db,'courses',String(fid)));
+    await db.collection('courses').doc(String(fid)).delete();
     courses.splice(i,1);renderAdmin();renderPublic();updateStat();toast('Curso eliminado');
   }catch(e){toast('Error al eliminar: '+(e.message||e),'err');}
 };
@@ -792,7 +788,7 @@ window.saveCourse = async function(){
   const id=Date.now();
   const courseData={id,name,type,price,cover,videos:vids};
   try{
-    await setDoc(doc(db,'courses',String(id)),courseData);
+    await db.collection('courses').doc(String(id)).set(courseData);
     courses.push({firestoreId:String(id),...courseData});
     closeModal('courseFormOverlay');renderAdmin();renderPublic();updateStat();toast('"'+name+'" publicado!','ok');
   }catch(e){toast('Error al guardar: '+(e.message||e),'err');}
@@ -838,7 +834,7 @@ window.goToMP = async function(){
   const c=courses[i];
   try{
     const purchaseId=user.uid+'_'+c.id;
-    await setDoc(doc(db,'purchases',purchaseId),{userId:user.uid,userEmail:user.email,courseId:c.id,date:new Date().toISOString()});
+    await db.collection('purchases').doc(purchaseId).set({userId:user.uid,userEmail:user.email,courseId:c.id,date:new Date().toISOString()});
     if(!purchased[user.email])purchased[user.email]=[];
     if(!purchased[user.email].includes(c.id))purchased[user.email].push(c.id);
   }catch(e){console.error('Error guardando compra:',e);}
