@@ -653,6 +653,13 @@ async function loadPurchasesFromFirestore(){
 
 // ── Auth ───────────────────────────────────────────────────────
 auth.onAuthStateChanged(async(firebaseUser)=>{
+  // Esperar a que el DOM esté listo antes de tocar el navbar
+  const ready = ()=> new Promise(r => {
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',r);
+    else r();
+  });
+  await ready();
+
   if(firebaseUser){
     try{
       const snap=await db.collection('users').doc(firebaseUser.uid).get();
@@ -686,8 +693,12 @@ function renderNav(){
 }
 
 function loginSuccess(u,silent=false){
-  user=u;closeModal('authOverlay');renderNav();renderPublic();
+  user=u;
+  if(!silent) closeModal('authOverlay');
+  renderNav();
+  renderPublic();
   if(!silent){toast(u.isAdmin?'Bienvenido admin Juan Pablo!':'Bienvenido, '+u.name+'!','ok');}
+  else if(u.isAdmin){toast('Sesion activa: admin','ok');}
 }
 
 // ── Funciones globales de auth ─────────────────────────────────
